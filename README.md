@@ -137,4 +137,3 @@ The code base strives to
 
 ## Known Issues
 
-- Their are some problems when using AEAD cipher. Will be fixed soon. You can use `RC4-MD5` as an cheap alternative.
