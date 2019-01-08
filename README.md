@@ -61,10 +61,10 @@ go get -u -v github.com/ihciah/go-shadowsocks-magic
 
 ### Server
 
-Start a server listening on port 8488 using `AEAD_CHACHA20_POLY1305` AEAD cipher with password `your-password`.
+Start a server listening on port 8488 using `RC4-MD5` cipher with password `your-password`.
 
 ```sh
-shadowsocks-magic -s 'ss://AEAD_CHACHA20_POLY1305:your-password@:8488' -verbose
+shadowsocks-magic -s 'ss://RC4-MD5:your-password@:8488' -verbose
 ```
 
 
@@ -75,7 +75,7 @@ connections, and tunnels both UDP and TCP on port 8053 and port 8054 to 8.8.8.8:
 respectively. 
 
 ```sh
-shadowsocks-magic -c 'ss://AEAD_CHACHA20_POLY1305:your-password@[server_address]:8488' \
+shadowsocks-magic -c 'ss://RC4-MD5:your-password@[server_address]:8488' \
     -verbose -socks :1080 -u -udptun :8053=8.8.8.8:53,:8054=8.8.4.4:53 \
                              -tcptun :8053=8.8.8.8:53,:8054=8.8.4.4:53
 ```
@@ -96,7 +96,7 @@ Start a client listening on port 1082 for redirected TCP connections and port 10
 TCP IPv6 connections.
 
 ```sh
-shadowsocks-magic -c 'ss://AEAD_CHACHA20_POLY1305:your-password@[server_address]:8488' -redir :1082 -redir6 :1083
+shadowsocks-magic -c 'ss://RC4-MD5:your-password@[server_address]:8488' -redir :1082 -redir6 :1083
 ```
 
 
@@ -117,7 +117,7 @@ Start a client on the same machine with the server. The client listens on port 1
 and tunnels to localhost:5201 where iperf3 is listening.
 
 ```sh
-shadowsocks-magic -c 'ss://AEAD_CHACHA20_POLY1305:your-password@[server_address]:8488' -tcptun :1090=localhost:5201
+shadowsocks-magic -c 'ss://RC4-MD5:your-password@[server_address]:8488' -tcptun :1090=localhost:5201
 ```
 
 Start iperf3 client to connect to the tunneld port instead
@@ -134,3 +134,7 @@ The code base strives to
 - be idiomatic Go and well organized;
 - use fewer external dependences as reasonably possible;
 - only include proven modern ciphers;
+
+## Known Issues
+
+- Their are some problems when using AEAD cipher. Will be fixed soon. You can use `RC4-MD5` as an cheap alternative.
