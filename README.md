@@ -4,6 +4,12 @@ A shadowsocks implementation in golang with Multi-connection Acceleration.
 
 The code is based on https://github.com/shadowsocks/go-shadowsocks2
 
+
+
+## [=======\> 中文版戳这！ <=======](https://www.ihcblog.com/How-to-Speed-Up-Shadowsocks/)
+
+
+
 ## Features
 
 - [x] SOCKS5 proxy with UDP Associate
@@ -67,6 +73,7 @@ Start a server listening on port 8488 using `RC4-MD5` cipher with password `your
 shadowsocks-magic -s 'ss://RC4-MD5:your-password@:8488' -verbose
 ```
 
+When deploy, you can close verbose.
 
 ### Client
 
