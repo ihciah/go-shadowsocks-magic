@@ -302,7 +302,7 @@ func tcpRemoteMagic(addr string, shadow func(net.Conn) net.Conn, GBT *magic.Glob
 				rc.(*net.TCPConn).SetKeepAlive(true)
 
 				logf("proxy with magic %s <-> %s", c.RemoteAddr(), tgt)
-				magic.RelayRemoteMain(c, rc, GBT)
+				magic.RelayRemoteMain(c, rc, GBT, logf)
 				if err != nil {
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						return // ignore i/o timeout
@@ -314,7 +314,7 @@ func tcpRemoteMagic(addr string, shadow func(net.Conn) net.Conn, GBT *magic.Glob
 				logf("proxy with magic (child) %s -> Key %s", c.RemoteAddr(), tgt)
 				var dataKey [16]byte
 				copy(dataKey[:], tgt[1:17])
-				_, err = magic.RelayRemoteChild(c, dataKey, GBT)
+				_, err = magic.RelayRemoteChild(c, dataKey, GBT, logf)
 				if err != nil {
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						return // ignore i/o timeout

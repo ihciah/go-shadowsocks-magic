@@ -14,10 +14,10 @@ func RelayLocal(localConn, remoteConn net.Conn, createConn func([16]byte) net.Co
 		return
 	}
 
-	dataBlocks, continuousData, exitJoinBlock, joinBlockfinish := BlockJoiner()
+	dataBlocks, continuousData, exitJoinBlock, joinBlockfinish := blockJoiner()
 	defer func() { exitJoinBlock <- true }()
 
-	exitThreadMan := ThreadManager(createConn, dataBlocks, dataKey)
+	exitThreadMan := threadManager(createConn, dataBlocks, dataKey)
 	recvExit, exitRecv := bufferFromRemote(remoteConn, dataBlocks)
 	sendExit, exitSend := dataBlockToConn(localConn, continuousData)
 
@@ -47,7 +47,7 @@ func RelayLocal(localConn, remoteConn net.Conn, createConn func([16]byte) net.Co
 	return
 }
 
-func relayLocalChild(createConn func([16]byte) net.Conn, dataBlocks chan DataBlock, dataKey [16]byte, exit chan bool) {
+func relayLocalChild(createConn func([16]byte) net.Conn, dataBlocks chan dataBlock, dataKey [16]byte, exit chan bool) {
 	conn := createConn(dataKey)
 	if conn == nil {
 		return
@@ -66,7 +66,7 @@ func relayLocalChild(createConn func([16]byte) net.Conn, dataBlocks chan DataBlo
 }
 
 // Connection Manager: create 4 connections every 0.5 seconds until Max.
-func ThreadManager(createConn func([16]byte) net.Conn, dataBlocks chan DataBlock, dataKey [16]byte) chan bool {
+func threadManager(createConn func([16]byte) net.Conn, dataBlocks chan dataBlock, dataKey [16]byte) chan bool {
 	exitSignal := make(chan bool, 2)
 	go func() {
 		exitSignals := make([]chan bool, 0)
@@ -74,7 +74,7 @@ func ThreadManager(createConn func([16]byte) net.Conn, dataBlocks chan DataBlock
 			select {
 			case <-time.After(time.Duration(time.Millisecond) * 500):
 				currentConn := len(exitSignals)
-				for i := currentConn; i < MaxConnection && i < currentConn+2; i++ {
+				for i := currentConn; i < maxConnection && i < currentConn+2; i++ {
 					exitS := make(chan bool, 2)
 					exitSignals = append(exitSignals, exitS)
 					go relayLocalChild(createConn, dataBlocks, dataKey, exitS)
@@ -90,8 +90,8 @@ func ThreadManager(createConn func([16]byte) net.Conn, dataBlocks chan DataBlock
 	return exitSignal
 }
 
-// Write DataBlock to connection
-func dataBlockToConn(conn net.Conn, db chan DataBlock) (chan bool, chan bool) {
+// Write dataBlock to connection
+func dataBlockToConn(conn net.Conn, db chan dataBlock) (chan bool, chan bool) {
 	taskExit := make(chan bool, 2)
 	exitSignal := make(chan bool, 2)
 	go func() {

@@ -21,7 +21,7 @@ func localToRemote(localConn, remoteConn net.Conn) chan bool {
 }
 
 // Receive data from the connection
-func bufferFromRemote(conn net.Conn, dataBlocks chan DataBlock) (chan bool, chan bool) {
+func bufferFromRemote(conn net.Conn, dataBlocks chan dataBlock) (chan bool, chan bool) {
 	exitSignal := make(chan bool, 2)
 	taskExit := make(chan bool)
 	go func() {
@@ -42,7 +42,7 @@ func bufferFromRemote(conn net.Conn, dataBlocks chan DataBlock) (chan bool, chan
 				}
 			}
 			select {
-			case dataBlocks <- DataBlock{
+			case dataBlocks <- dataBlock{
 				blockData,
 				blockSize,
 				blockID,

@@ -1,13 +1,13 @@
 package magic
 
 import (
-	"log"
+	"errors"
 	"net"
 	"time"
 )
 
 // Fetch remote resource into GBT and treat the main connection as a normal child connection
-func RelayRemoteMain(localConn, remoteConn net.Conn, GBT *GlobalBufferTable) {
+func RelayRemoteMain(localConn, remoteConn net.Conn, GBT *GlobalBufferTable, logf func(f string, v ...interface{})) {
 	k := GBT.New()
 	defer GBT.Free(k)
 	_, err := localConn.Write(k[:])
@@ -33,15 +33,15 @@ func RelayRemoteMain(localConn, remoteConn net.Conn, GBT *GlobalBufferTable) {
 	var bID uint32
 	for bID = 0; ; bID++ {
 		// Prevent id overflow
-		bID = bID % TableSize
-		dataBlock := DataBlock{
+		bID = bID % tableSize
+		dataBlock := dataBlock{
 			make([]byte, bufSize),
 			0,
 			bID,
 		}
 		n, err := remoteConn.Read(dataBlock.Data)
 		if err != nil {
-			log.Printf("Error when read remote: %s\n", err)
+			logf("Error when read remote: %s", err)
 			break
 		}
 		dataBlock.Size = uint32(n)
@@ -56,21 +56,21 @@ func RelayRemoteMain(localConn, remoteConn net.Conn, GBT *GlobalBufferTable) {
 }
 
 // Send block data
-func RelayRemoteChild(localConnChild net.Conn, dataKey [16]byte, GBT *GlobalBufferTable) (int64, error) {
-	log.Printf("Child thread start.\n")
+func RelayRemoteChild(localConnChild net.Conn, dataKey [16]byte, GBT *GlobalBufferTable, logf func(f string, v ...interface{})) (int64, error) {
+	logf("child thread start")
 	bufferNode, ok := (*GBT)[dataKey]
 	if !ok {
-		log.Printf("DataKey Invalid.\n")
-		return 0, INVALID_KEY
+		logf("dataKey invalid")
+		return 0, errors.New("invalid data key")
 	}
-	log.Printf("DataKey Verified.\n")
+	logf("dataKey verified")
 	bufferToLocal(localConnChild, bufferNode)
 	return 0, nil
 }
 
 // Relay data from GBT to local
 // On error or exit signal return
-func bufferToLocal(conn net.Conn, bufferNode *BufferNode) {
+func bufferToLocal(conn net.Conn, bufferNode *bufferNode) {
 	exitSignal := make(chan bool, 2)
 	bufferNode.Lock.Lock()
 	bufferNode.ExitSignals = append(bufferNode.ExitSignals, exitSignal)
@@ -84,7 +84,6 @@ func bufferToLocal(conn net.Conn, bufferNode *BufferNode) {
 			bytes := dataBlock.Pack()
 			_, err := conn.Write(bytes)
 			if err != nil {
-				log.Printf("Error when sending packet: %s\n", err)
 				bufferNode.Chan <- dataBlock
 				return
 			}
@@ -97,7 +96,6 @@ func bufferToLocal(conn net.Conn, bufferNode *BufferNode) {
 						bytes := dataBlock.Pack()
 						_, err := conn.Write(bytes)
 						if err != nil {
-							log.Printf("Error when sending packet: %s\n", err)
 							bufferNode.Chan <- dataBlock
 							return
 						}

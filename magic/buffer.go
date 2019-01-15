@@ -7,37 +7,37 @@ import (
 	"sync"
 )
 
-const MaxConnection = 16
+const maxConnection = 16
 const bufSize = 64*1024 - 8
-const TableSize = 65536
+const tableSize = 65536
 
-type GlobalBufferTable map[[16]byte](*BufferNode)
+type GlobalBufferTable map[[16]byte](*bufferNode)
 
-type BufferNode struct {
-	Chan        chan DataBlock
+type bufferNode struct {
+	Chan        chan dataBlock
 	WG          sync.WaitGroup
 	ExitSignals []chan bool
 	Lock        sync.Mutex
 }
 
-func MakeBufferNode() BufferNode {
+func makeBufferNode() bufferNode {
 	var wg sync.WaitGroup
 	var lock sync.Mutex
-	return BufferNode{
-		make(chan DataBlock, MaxConnection*2),
+	return bufferNode{
+		make(chan dataBlock, maxConnection*2),
 		wg,
 		make([]chan bool, 0),
 		lock,
 	}
 }
 
-type DataBlock struct {
+type dataBlock struct {
 	Data    []byte
 	Size    uint32
 	BlockId uint32
 }
 
-func (dataBlock DataBlock) Pack() []byte {
+func (dataBlock dataBlock) Pack() []byte {
 	packedData := make([]byte, 8+dataBlock.Size)
 	binary.LittleEndian.PutUint32(packedData[:], dataBlock.BlockId)
 	binary.LittleEndian.PutUint32(packedData[4:], dataBlock.Size)
@@ -51,7 +51,7 @@ func (gbt *GlobalBufferTable) New() [16]byte {
 	for {
 		io.ReadFull(rand.Reader, key[:])
 		if _, exist := (*gbt)[key]; !exist {
-			bufferNode := MakeBufferNode()
+			bufferNode := makeBufferNode()
 			(*gbt)[key] = &bufferNode
 			return key
 		}
@@ -66,21 +66,21 @@ func (gbt *GlobalBufferTable) Free(key [16]byte) {
 	delete(*gbt, key)
 }
 
-func joinBlocks(inData, outData chan DataBlock, exitSignal, taskFinish chan bool) {
-	table := make(map[uint32]DataBlock)
+func joinBlocks(inData, outData chan dataBlock, exitSignal, taskFinish chan bool) {
+	table := make(map[uint32]dataBlock)
 	var pointer uint32 = 0
 	for {
 		select {
 		case db := <-inData:
-			table[db.BlockId%TableSize] = db
-			if pointer != db.BlockId%TableSize {
+			table[db.BlockId%tableSize] = db
+			if pointer != db.BlockId%tableSize {
 				continue
 			}
 			for {
 				if d, exist := table[pointer]; exist {
 					outData <- d
 					delete(table, pointer)
-					pointer = (pointer + 1) % TableSize
+					pointer = (pointer + 1) % tableSize
 					continue
 				}
 				break
@@ -92,15 +92,15 @@ func joinBlocks(inData, outData chan DataBlock, exitSignal, taskFinish chan bool
 			for {
 				select {
 				case db := <-inData:
-					table[db.BlockId%TableSize] = db
-					if pointer != db.BlockId%TableSize {
+					table[db.BlockId%tableSize] = db
+					if pointer != db.BlockId%tableSize {
 						continue
 					}
 					for {
 						if d, exist := table[pointer]; exist {
 							outData <- d
 							delete(table, pointer)
-							pointer = (pointer + 1) % TableSize
+							pointer = (pointer + 1) % tableSize
 							continue
 						}
 						break
@@ -114,9 +114,9 @@ func joinBlocks(inData, outData chan DataBlock, exitSignal, taskFinish chan bool
 	}
 }
 
-func BlockJoiner() (chan DataBlock, chan DataBlock, chan bool, chan bool) {
-	dataBlocks := make(chan DataBlock, MaxConnection*2)
-	continuousData := make(chan DataBlock, MaxConnection*2)
+func blockJoiner() (chan dataBlock, chan dataBlock, chan bool, chan bool) {
+	dataBlocks := make(chan dataBlock, maxConnection*2)
+	continuousData := make(chan dataBlock, maxConnection*2)
 	exitJoinBlock := make(chan bool, 2)
 	finishSignal := make(chan bool, 2)
 	go joinBlocks(dataBlocks, continuousData, exitJoinBlock, finishSignal)
