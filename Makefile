@@ -3,7 +3,7 @@ BINDIR=bin
 GOBUILD=CGO_ENABLED=0 go build -ldflags '-w -s -extldflags "-static"'
 # The -w and -s flags reduce binary sizes by excluding unnecessary symbols and debug info
 
-all: linux macos win64
+all: linux macos win64 arm mips
 
 linux:
 	GOARCH=amd64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
@@ -14,7 +14,13 @@ macos:
 win64:
 	GOARCH=amd64 GOOS=windows $(GOBUILD) -o $(BINDIR)/$(NAME)-$@.exe
 
-releases: linux macos win64
+arm:
+	GOARCH=arm GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
+
+mips:
+	GOARCH=mips GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
+
+releases: linux macos win64 arm mips
 	chmod +x $(BINDIR)/$(NAME)-*
 	gzip $(BINDIR)/$(NAME)-linux
 	gzip $(BINDIR)/$(NAME)-macos
