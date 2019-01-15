@@ -24,6 +24,8 @@ releases: linux macos win64 arm mips
 	chmod +x $(BINDIR)/$(NAME)-*
 	gzip $(BINDIR)/$(NAME)-linux
 	gzip $(BINDIR)/$(NAME)-macos
+	gzip $(BINDIR)/$(NAME)-arm
+	gzip $(BINDIR)/$(NAME)-mips
 	zip -m -j $(BINDIR)/$(NAME)-win64.zip $(BINDIR)/$(NAME)-win64.exe
 
 clean:

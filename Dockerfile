@@ -3,16 +3,16 @@ FROM golang:1.11.3-alpine3.8 AS builder
 RUN apk upgrade \
     && apk add git \
     && go get -ldflags '-w -s' \
-        github.com/shadowsocks/go-shadowsocks2
+        github.com/ihciah/go-shadowsocks-magic
 
 FROM alpine:3.8
 
-LABEL maintainer="mritd <mritd1234@gmail.com>"
+LABEL maintainer="ihciah <ihciah@gmail.com>"
 
 RUN apk upgrade \
     && apk add bash tzdata \
     && rm -rf /var/cache/apk/*
 
-COPY --from=builder /go/bin/go-shadowsocks2 /usr/bin/shadowsocks
+COPY --from=builder /go/bin/go-shadowsocks-magic /usr/bin/shadowsocks
 
 ENTRYPOINT ["shadowsocks"]
