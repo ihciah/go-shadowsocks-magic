@@ -4,9 +4,15 @@ A shadowsocks implementation in golang with Multi-connection Acceleration.
 
 The code is based on https://github.com/shadowsocks/go-shadowsocks2
 
+==================================================
 
+## UPDATE 2019-10: Deprecated. [Rabbit TCP]( https://github.com/ihciah/rabbit-tcp ) is recommended.
 
-## [=======\> 中文版戳这！ <=======](https://www.ihcblog.com/How-to-Speed-Up-Shadowsocks/)
+## 2019-10 更新: 不建议使用。请使用[Rabbit TCP]( https://github.com/ihciah/rabbit-tcp ) 。
+
+==================================================
+
+[中文版戳这！](https://www.ihcblog.com/How-to-Speed-Up-Shadowsocks/)
 
 
 
